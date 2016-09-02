@@ -1,0 +1,99 @@
+;; -*-lisp-*-
+(in-package :stumpwm)
+
+;; change the prefix key to something else
+(set-prefix-key (kbd "C-t"))
+
+;; Set mouse focus style: :sloppy, :click :ignore
+(setf *mouse-focus-policy* :click)
+
+;; Custom commands
+(defcommand colon1 (&optional (initial "")) (:rest)
+  "Prompt the user for an interactive command."
+  (let ((cmd (read-one-line (current-screen) ": " :initial-input initial)))
+    (when cmd
+      (eval-command cmd t))))
+
+(defcommand firefox () ()
+  "Run or raise firefox"
+  (run-or-raise "firefox" '(:class "Firefox")))
+(defcommand icedove () ()
+  "Run or raise icedove"
+  (run-or-raise "icedove" '(:class "Icedove")))
+(defcommand x-terminal-emulator () ()
+  "Run or raise terminator"
+  (run-or-raise "x-terminal-emulator" '(:class "X-terminal-emulator")))
+(defcommand spotify () ()
+  "Run or raise terminator"
+  (run-or-raise "spotify" '(:class "Spotify")))
+
+;; Hotkeys
+(loop for (key application) in (list 
+				'("f" "firefox") 
+				'("d" "icedove")
+				'("e" "emacs")
+				'("c" "x-terminal-emulator")
+				'("m" "spotify")
+				'("h" "move-focus left")
+				'("l" "move-focus right")
+				'("j" "move-focus down")
+				'("DEL" "delete-window")
+				'("C-l" "exec slock")
+				'("$" "exec dmenu_run -nb royalblue4 -nf white -sb royalblue4 -sf yellow")
+				'("k" "move-focus up"))		
+      do (define-key *root-map* (kbd key) application))
+
+;; Volume controls
+(defcommand volume-up () ()
+  "Raise the volume by 5%"
+  (echo-string (current-screen) (run-shell-command "amixer sset Master 5%+" t)))
+(defcommand volume-down () ()
+  "Decrease the volume by 5%"
+  (echo-string (current-screen) (run-shell-command "amixer sset Master 5%-" t)))
+(defcommand volume-mute () ()
+  "Toggle volume mute"
+  (echo-string (current-screen) (run-shell-command "amixer sset Master toggle" t)))
+
+(loop for (key application) in (list
+				'("XF86AudioMute" "volume-mute")
+				'("XF86AudioRaiseVolume" "volume-up")
+				'("XF86AudioLowerVolume" "volume-down"))
+      do (define-key *top-map* (kbd key) application))
+
+
+;; Customize the windows
+(set-bg-color "royalblue4")
+(set-focus-color "yellow")
+(set-unfocus-color "royalblue4")
+(set-win-bg-color "royalblue4")
+(set-frame-outline-width 1)
+
+(setf *normal-border-width* 1
+      *window-borfder-style* :thin
+      *maxsize-border-width* 1)
+
+;; Message window font
+(set-font "-xos4-terminus-medium-r-normal--14-140-72-72-c-80-iso8859-15")
+
+;; Clear rules
+(clear-window-placement-rules)
+
+;; Create a couple groups/virtual desktops and define them
+(run-commands "gnewbg Default" "gnewbg Secondary" "gnewbg Tertiary")
+
+(define-frame-preference "Default"
+  ;; frame raise lock (lock AND raise == jumpto)
+  (0 t nil :class "X-terminal-emulator")
+  (2 t t :class "Emacs")
+  (1 t t :class "Firefox"))
+
+(define-frame-preference "Secondary"
+  ;; frame raise lock (lock AND raise == jumpto)
+  (1 t t :class "Icedove")
+  (1 t t :class "Spotify"))
+
+;; Startup programs
+(run-shell-command "xsetroot -solid royalblue4")
+(run-shell-command "setxkbmap -option 'ctrl:nocaps'")
+(run-shell-command "SpiderOakONE")
+
